@@ -16,6 +16,7 @@ from google.generativeai.types.generation_types import (
     GenerateContentResponse,
     GenerationConfig,
 )
+from google.cloud import aiplatform
 
 from metagpt.configs.llm_config import LLMConfig, LLMType
 from metagpt.const import USE_CONFIG_TIMEOUT
@@ -51,7 +52,7 @@ class GeminiLLM(BaseLLM):
 
         self.__init_gemini(config)
         self.config = config
-        self.model = "gemini-pro"  # so far only one model
+        self.model = "gemini-1.5-flash-002"  # so far only one model
         self.pricing_plan = self.config.pricing_plan or self.model
         self.llm = GeminiGenerativeModel(model_name=self.model)
 
@@ -60,7 +61,8 @@ class GeminiLLM(BaseLLM):
             logger.info(f"Use proxy: {config.proxy}")
             os.environ["http_proxy"] = config.proxy
             os.environ["https_proxy"] = config.proxy
-        genai.configure(api_key=config.api_key)
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "gemini_access_key.json"
+        aiplatform.init(project="gen-lang-client-0013705358", location="us-central1")
 
     def _user_msg(self, msg: str, images: Optional[Union[str, list[str]]] = None) -> dict[str, str]:
         # Not to change BaseLLM default functions but update with Gemini's conversation format.
